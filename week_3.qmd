@@ -1,0 +1,81 @@
+---
+title: "week_3_discuss"
+format: html
+editor: visual
+---
+
+```{r}
+library(here)
+library(tidyverse)
+library(sf)
+library(tmap)
+```
+
+```{r}
+sb_protected_areas <- read_sf(here::here("data", "cpad_super_units_sb.shp")) %>% 
+  st_transform("ESRI:102009")
+
+sb_city_boundaries <- read_sf(here::here("data", "sb_city_boundaries_2003.shp")) %>%
+  st_transform("ESRI:102009")
+
+sb_county_boundary <- read_sf(here::here("data", "sb_county_boundary_2020.shp")) %>%
+  st_transform("ESRI:102009")
+
+aves <- read_sf(here::here("data", "aves_observations_2020_2024.shp")) %>%
+  st_transform("ESRI:102009")
+```
+
+```{r}
+aves_PA_subset <- sb_protected_areas[aves, ]
+```
+
+```{r}
+nrow(aves_PA_subset)
+```
+
+
+```{r}
+aves_PA_join <- st_join(aves, sb_protected_areas)
+```
+
+```{r}
+nrow(aves_PA_join)
+```
+```{r}
+st_crs(sb_protected_areas)$units
+```
+
+```{r}
+PA_buffer_5km <- st_buffer(sb_protected_areas, dist = 5000)
+```
+
+```{r}
+aves_buffer_subset <- PA_buffer_5km[aves, ]
+```
+
+```{r}
+goleta_buffer_5k <- sb_city_boundaries %>% filter(NAME == "Goleta") %>% st_buffer(dist = 5000)
+```
+
+```{r}
+goleta_intersects <- st_intersects(sb_city_boundaries, goleta_buffer_5k)
+goleta_intersection <- st_intersection(sb_city_boundaries, goleta_buffer_5k)
+goleta_within <- st_within(sb_city_boundaries, goleta_buffer_5k)
+```
+
+```{r}
+tm_shape(goleta_buffer_5k) +
+  tm_polygons() +
+tm_shape(goleta_intersection) +
+  tm_polygons(col = "red") +
+tm_shape(goleta_within) +
+  tm_polygons(col = "green")
+tm_shape(sb_city_boundaries %>% filter(NAME == "Goleta")) +
+  tm_polygons(col = "blue")
+```
+
+```{r}
+redlining_cbg2 <- ejscreen_LA %>% 
+  st_filter()
+```
+
